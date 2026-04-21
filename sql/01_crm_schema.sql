@@ -65,3 +65,7 @@ do $$ begin
     execute 'create index idx_leads_empresa_lower on public.leads (lower(empresa))';
   end if;
 end $$;
+
+-- Índices adicionais (idempotentes)
+create index if not exists idx_leads_status_codigo on public.leads (status_codigo);
+create index if not exists idx_leads_criado_em on public.leads (criado_em desc);

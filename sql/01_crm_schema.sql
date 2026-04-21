@@ -69,3 +69,8 @@ end $$;
 -- Índices adicionais (idempotentes)
 create index if not exists idx_leads_status_codigo on public.leads (status_codigo);
 create index if not exists idx_leads_criado_em on public.leads (criado_em desc);
+
+-- Unicidade (case-insensitive) de telefone normalizado quando presente
+-- Garante que dois telefones equivalentes (com/sem máscara) não coexistam
+create unique index if not exists uq_leads_phone_digits
+  on public.leads ((regexp_replace(telefone, '[^0-9]', '', 'g'))) where telefone is not null;

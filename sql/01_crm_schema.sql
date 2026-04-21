@@ -52,3 +52,16 @@ do $$ begin
   end if;
 end $$;
 
+-- Índices úteis para busca/listagem
+do $$ begin
+  if not exists (
+    select 1 from pg_indexes where schemaname = 'public' and indexname = 'idx_leads_nome_lower'
+  ) then
+    execute 'create index idx_leads_nome_lower on public.leads (lower(nome))';
+  end if;
+  if not exists (
+    select 1 from pg_indexes where schemaname = 'public' and indexname = 'idx_leads_empresa_lower'
+  ) then
+    execute 'create index idx_leads_empresa_lower on public.leads (lower(empresa))';
+  end if;
+end $$;

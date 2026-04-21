@@ -119,3 +119,34 @@ comment on column public.tarefas_lead.criado_em is 'Timestamp de criação da ta
 comment on column public.tarefas_lead.concluido_em is 'Timestamp de conclusão (quando completada).';
 
 create index if not exists idx_tarefas_lead_status_data on public.tarefas_lead (lead_id, status, data_limite);
+
+-- Propostas (1:N com leads)
+create table if not exists public.propostas (
+  id uuid primary key default gen_random_uuid(),
+  lead_id uuid not null references public.leads(id) on delete cascade,
+  titulo text not null,
+  moeda text not null default 'BRL',
+  subtotal numeric(12,2) not null default 0,
+  desconto_pct numeric(5,2) not null default 0 check (desconto_pct >= 0 and desconto_pct <= 100),
+  total numeric(12,2) not null default 0,
+  corpo_md text,
+  status text not null default 'rascunho',
+  criado_em timestamptz not null default now(),
+  atualizado_em timestamptz not null default now()
+);
+
+-- Comentários (documentação)
+comment on table public.propostas is 'Propostas comerciais associadas a um lead.';
+comment on column public.propostas.id is 'Identificador da proposta (UUID).';
+comment on column public.propostas.lead_id is 'Lead associado (FK).';
+comment on column public.propostas.titulo is 'Título da proposta.';
+comment on column public.propostas.moeda is 'Moeda da proposta (padrão BRL).';
+comment on column public.propostas.subtotal is 'Soma dos itens antes de descontos.';
+comment on column public.propostas.desconto_pct is 'Desconto percentual aplicado (0–100).';
+comment on column public.propostas.total is 'Valor total após desconto.';
+comment on column public.propostas.corpo_md is 'Corpo da proposta em Markdown (conteúdo textual).';
+comment on column public.propostas.status is 'Status da proposta (ex.: rascunho).';
+comment on column public.propostas.criado_em is 'Timestamp de criação.';
+comment on column public.propostas.atualizado_em is 'Timestamp de atualização.';
+
+create index if not exists idx_propostas_lead_id on public.propostas (lead_id);

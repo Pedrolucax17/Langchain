@@ -92,3 +92,30 @@ comment on column public.notas_lead.criado_em is 'Timestamp da criação da nota
 
 create index if not exists idx_notas_lead_lead_id on public.notas_lead (lead_id);
 create index if not exists idx_notas_lead_criado_em on public.notas_lead (criado_em desc);
+
+-- Tarefas por lead (1:N)
+create table if not exists public.tarefas_lead (
+  id uuid primary key default gen_random_uuid(),
+  lead_id uuid not null references public.leads(id) on delete cascade,
+  tipo text not null check (tipo in ('ligacao','email','reuniao','tarefa')),
+  titulo text not null,
+  status text not null check (status in ('aberta','concluida','cancelada')),
+  data_limite timestamptz,
+  prioridade text,
+  criado_em timestamptz not null default now(),
+  concluido_em timestamptz
+);
+
+-- Comentários (documentação)
+comment on table public.tarefas_lead is 'Tarefas vinculadas a um lead (to-dos e follow-ups).';
+comment on column public.tarefas_lead.id is 'Identificador da tarefa (UUID).';
+comment on column public.tarefas_lead.lead_id is 'Referência ao lead (FK).';
+comment on column public.tarefas_lead.tipo is 'Tipo da tarefa: ligacao, email, reuniao, tarefa.';
+comment on column public.tarefas_lead.titulo is 'Título/descritivo curto da tarefa.';
+comment on column public.tarefas_lead.status is 'Status da tarefa: aberta, concluida, cancelada.';
+comment on column public.tarefas_lead.data_limite is 'Prazo/vence em (opcional).';
+comment on column public.tarefas_lead.prioridade is 'Prioridade textual (opcional).';
+comment on column public.tarefas_lead.criado_em is 'Timestamp de criação da tarefa.';
+comment on column public.tarefas_lead.concluido_em is 'Timestamp de conclusão (quando completada).';
+
+create index if not exists idx_tarefas_lead_status_data on public.tarefas_lead (lead_id, status, data_limite);

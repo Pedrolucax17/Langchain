@@ -74,3 +74,21 @@ create index if not exists idx_leads_criado_em on public.leads (criado_em desc);
 -- Garante que dois telefones equivalentes (com/sem máscara) não coexistam
 create unique index if not exists uq_leads_phone_digits
   on public.leads ((regexp_replace(telefone, '[^0-9]', '', 'g'))) where telefone is not null;
+
+-- Notas por lead (1:N)
+create table if not exists public.notas_lead (
+  id uuid primary key default gen_random_uuid(),
+  lead_id uuid not null references public.leads(id) on delete cascade,
+  texto text not null,
+  criado_em timestamptz not null default now()
+);
+
+-- Comentários (documentação)
+comment on table public.notas_lead is 'Notas associadas a um lead (histórico de interações).';
+comment on column public.notas_lead.id is 'Identificador da nota (UUID).';
+comment on column public.notas_lead.lead_id is 'Referência ao lead (FK).';
+comment on column public.notas_lead.texto is 'Conteúdo livre da nota.';
+comment on column public.notas_lead.criado_em is 'Timestamp da criação da nota.';
+
+create index if not exists idx_notas_lead_lead_id on public.notas_lead (lead_id);
+create index if not exists idx_notas_lead_criado_em on public.notas_lead (criado_em desc);

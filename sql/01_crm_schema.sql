@@ -43,3 +43,12 @@ comment on column public.leads.ultimo_contato_em is 'Data/hora do último contat
 comment on column public.leads.proxima_acao_em is 'Data/hora da próxima ação planejada.';
 comment on column public.leads.criado_em is 'Timestamp de criação.';
 comment on column public.leads.atualizado_em is 'Timestamp da última atualização.';
+
+-- Unicidade (case-insensitive) de email quando presente
+do $$ begin
+  if not exists(
+    select 1 from pg_indexes where schemaname = 'public' and indexname = 'uq_leads_email'
+  ) then execute 'create unique index uq_leads_email on public.leads (lower(email)) where email is not null';
+  end if;
+end $$;
+

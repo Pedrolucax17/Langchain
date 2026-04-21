@@ -150,3 +150,24 @@ comment on column public.propostas.criado_em is 'Timestamp de criação.';
 comment on column public.propostas.atualizado_em is 'Timestamp de atualização.';
 
 create index if not exists idx_propostas_lead_id on public.propostas (lead_id);
+
+-- Itens de proposta (1:N)
+create table if not exists public.itens_proposta (
+  id uuid primary key default gen_random_uuid(),
+  proposta_id uuid not null references public.propostas(id) on delete cascade,
+  descricao text not null,
+  quantidade numeric(12,2) not null check (quantidade >= 0),
+  preco_unitario numeric(12,2) not null check (preco_unitario >= 0),
+  total numeric(12,2) not null
+);
+
+-- Comentários (documentação)
+comment on table public.itens_proposta is 'Itens de uma proposta (produtos/serviços).';
+comment on column public.itens_proposta.id is 'Identificador do item da proposta (UUID).';
+comment on column public.itens_proposta.proposta_id is 'Proposta associada (FK).';
+comment on column public.itens_proposta.descricao is 'Descrição do item.';
+comment on column public.itens_proposta.quantidade is 'Quantidade.';
+comment on column public.itens_proposta.preco_unitario is 'Preço unitário.';
+comment on column public.itens_proposta.total is 'Total do item (quantidade x preço).';
+
+create index if not exists idx_itens_proposta_proposta_id on public.itens_proposta (proposta_id);

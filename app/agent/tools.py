@@ -18,3 +18,14 @@ def _db_url() -> str:
 
 def _conn():
   return psycopg.connect(_db_url())
+
+UUID_RE = re.compile(r"^[0-9a-fA-F-]{36}$")
+
+
+def _normalize_phone(s: str) -> str:
+    return re.sub(r"\D+", "", s or "")
+
+
+def _is_uuid(s: str) -> bool:
+    return bool(s) and bool(UUID_RE.match(s))
+

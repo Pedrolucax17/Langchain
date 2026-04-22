@@ -89,7 +89,7 @@ def criar_lead(
   Usa status_codigo (default: novo)."""
   if not nome:
     return {"error": {"message": "Campo 'nome' é obrigatório"}}
-  with _conn as conn:
+  with _conn() as conn:
     with conn.cursor() as cur:
       cur.execute("SELECT 1 FROM public.status_lead WHERE codigo=%s", (status_codigo,))
       if not cur.fetchone():
@@ -103,7 +103,7 @@ def criar_lead(
           {"error": {"message": "Já existe lead com este email."}}
       if telefone:
         cur.execute(
-          "SELECT 1 FROM public.leads WHERE egexp_replace(telefone,'[^0-9]','','g')=%s",
+          "SELECT 1 FROM public.leads WHERE regexp_replace(telefone,'[^0-9]','','g')=%s",
           (_normalize_phone(telefone),)
         )
         if cur.fetchone():

@@ -76,3 +76,45 @@ def _resolve_lead_id_by_ref(cur, ref: str) -> Tuple[Optional[str], List[Dict[str
     {"lead_id": r[0], "nome": r[1], "email": r[2], "empresa": r[3]} for r in rows
   ]
   
+@tool
+def criar_lead(
+  nome: str,
+    email: Optional[str] = None,
+    telefone: Optional[str] = None,
+    empresa: Optional[str] = None,
+    origem: Optional[str] = None,
+    status_codigo: str = "novo",
+) -> Dict[str, Any]:
+  """Cria um lead. Campos: nome (obrigatório), email, telefone, empresa, origem. 
+  Usa status_codigo (default: novo)."""
+  if not nome:
+    return {"error": {"message": "Campo 'nome' é obrigatório"}}
+  with _conn as conn:
+    with conn.cursor() as cur:
+      cur.execute("SELECT 1 FROM public.status_lead WHERE codigo=%s", (status_codigo,))
+      if not cur.fetchone():
+        return {"error": {"status_codigo inválido: {status_codigo}"}}
+      #Checar unicidade email/telefone
+      if email:
+        cur.execute(
+          "SELECT 1 FROM public.leads WHERE lower(email)=lower(%s)", (email,)
+        )
+        if cur.fetchone():
+          {"error": {"message": "Já existe lead com este email."}}
+      if telefone:
+        cur.execute(
+          "SELECT 1 FROM public.leads WHERE egexp_replace(telefone,'[^0-9]','','g')=%s",
+          (_normalize_phone(telefone),)
+        )
+        if cur.fetchone():
+          {"error": {"message": "Já existe lead com este telefone."}}
+      cur.execute(
+        """
+        INSERT INTO public.leads (nome, email, telefone, empresa, origem, status_codigo)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        returning id
+        """,
+        (nome, email, telefone, empresa, origem, status_codigo)
+      )
+      lead_id = cur.fetchone()[0]
+  return {"message": "Lead criado", "data": {"lead_id": lead_id, "nome": nome, "email": email, "empresa": empresa}}

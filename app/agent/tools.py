@@ -29,3 +29,50 @@ def _normalize_phone(s: str) -> str:
 def _is_uuid(s: str) -> bool:
     return bool(s) and bool(UUID_RE.match(s))
 
+def _resolve_lead_id_by_ref(cur, ref: str) -> Tuple[Optional[str], List[Dict[str, Any]]]:
+  """
+  Resolve um lead a partir de uma referência natual (uuid/email/telefone/nome+empresa).
+  Retorna (lead_id_ou_none, matches_para_desambiguação).
+  """
+  
+  if not ref:
+    return None, []
+  ref = ref.strip()
+  if _is_uuid(ref):
+    cur.execute("SELECT id,nome,email,empresa FROM public.leads WHERE id = %s", (ref,))
+    row = cur.fetchone()
+    return (row[0], []) if row else (None, [])
+  
+  if "@" in ref:
+    cur.execute(
+      "SELECT id,nome,email,empresa FROM public.leads WHERE lower(email)=lower(%s)", (ref,)
+    )
+    row = cur.fetchone()
+    return (row[0], []) if row else (None, [])
+  digits = _normalize_phone(ref)
+  if len(digits) >= 8:
+    cur.execute(
+      "SELECT id,nome,email,empresa FROM public.leads WHERE regexp_replace(telefone, '[^0-9]', '', 'g')=%s", (digits, )
+    )
+    row = cur.fetchone()
+    return (row[0], []) if row else (None, [])
+  
+  # Nome/Empresa
+  like = f"%{ref.lower}%"
+  cur.execute(
+    """
+    SELECT id,nome,email,empresa
+    FROM public.leads
+    WHERE lower(nome) like %s or lower(empresa) like %s
+    ORDER BY criado_em desc
+    LIMIT 5
+    """,
+    (like, like)
+  )
+  rows = cur.fetchall() or []
+  if len(rows) == 1:
+    return rows[0][0], []
+  return None, [
+    {"lead_id": r[0], "nome": r[1], "email": r[2], "empresa": r[3]} for r in rows
+  ]
+  

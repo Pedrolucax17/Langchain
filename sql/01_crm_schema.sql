@@ -1,4 +1,4 @@
-create extention if not exists "pgcrypto";
+create extension if not exists "pgcrypto";
 
 -- Tabela de lookup para status de leads
 CREATE TABLE if not exists public.status_lead(
@@ -9,9 +9,9 @@ CREATE TABLE if not exists public.status_lead(
 
 -- Comentários (Documentação)
 comment on table public.status_lead is 'Lookup de status de lead(tabela de referência).';
-comment on table public.status_lead.codigo is 'Código do status (PK), ex: novo, qualificado.';
-comment on table public.status_lead.rotulo is 'Rótulo amigável do status.';
-comment on table public.status_lead.criado_em is 'Timestamp de criação do registro';
+comment on column public.status_lead.codigo is 'Código do status (PK), ex: novo, qualificado.';
+comment on column public.status_lead.rotulo is 'Rótulo amigável do status.';
+comment on column public.status_lead.criado_em is 'Timestamp de criação do registro';
 
 -- Tabela principal de leads
 CREATE TABLE if NOT EXISTS public.leads(
@@ -25,8 +25,8 @@ CREATE TABLE if NOT EXISTS public.leads(
   status_codigo TEXT NOT NULL REFERENCES public.status_lead(codigo) default 'novo',
   ultimo_contato_em timestamptz,
   proxima_acao_em timestamptz,
-  criacao_em timestamptz NOT NULL default now(),
-  atualizado_em timestamptz NOT NULL now()
+  criado_em timestamptz NOT NULL default now(),
+  atualizado_em timestamptz NOT NULL default now()
 );
 
 -- Comentários (documentação)
